@@ -1,5 +1,12 @@
-function vol = upsample(vol, ratio)
+function vol = upsample(vol, ratio, interpMethod)
+% warning: this function interpolates in an 'interesting' way
+% e.g. scale by 2 does not mean every second element will be the same as the original image elements.
+% it forces end elements to match, instead!
 % TODO: reconcile with clean-up of imresize/volresizeNd
+
+    if nargin == 2
+        interpMethod = 'linear';
+    end
     
     % get the interpolation points in each dimensions
     x = cell(1, ndims(vol));
@@ -12,4 +19,4 @@ function vol = upsample(vol, ratio)
     [xi{:}] = ndgrid(x{:});
     
     % interpolate
-    vol = interpn(vol, xi{:}, 'linear');
+    vol = interpn(vol, xi{:}, interpMethod);
