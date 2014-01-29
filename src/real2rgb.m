@@ -8,4 +8,4 @@ function rgbIm = real2rgb(realIm, dim)
     imr = realIm; imr(imr < 0) = 0;
     imb = -realIm; imb(imb < 0) = 0;
     rgbIm = cat(dim, imr, imb, imb);
-    rgbIm = rgbIm ./ max(rgbIm(:));
+    rgbIm = 1 - rgbIm ./ max(rgbIm(:));
