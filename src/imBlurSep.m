@@ -1,4 +1,4 @@
-function filtVol = imBlurSep(vol, window, sigma, voxDims, padType)
+function [filtVol, filt]  = imBlurSep(vol, window, sigma, voxDims, padType)
 % IMBLURSEP blur the given volume with separable gaussian filter
 % 	vol the volume (nDims)
 % 	window should be (nDims x 1)
