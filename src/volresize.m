@@ -22,7 +22,7 @@ function vol = volresize(vol, sizeDstVol, interpMethod)
 
 
     % if down-sampling, do smoothing
-    if isDownSampling && ~isUpSampling
+    if isDownSampling && ~isUpSampling && ~(strcmp(interpMethod, 'nearest'))
         
         % blur the image. note the sigma factor is kind of arbritrary
 %         s = pi^2 / 8 * sizeDstVol./sizeVol;
