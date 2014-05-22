@@ -28,6 +28,7 @@ addParamValue(p, 'quality',100,@isnumeric);
 addParamValue(p, 'fileext', '.mp4');          
 addParamValue(p, 'profile', 'MPEG-4');        
 addParamValue(p, 'reshapeSize', [], @(x) numel(x) == 0 || numel(x) == 2);
+addParamValue(p, 'crop', [], @isnumeric); % [ymin, xmin, ymax, xmax]
 parse(p, inputFiles, outfile, varargin{:});
 
 nFrames = numel(inputFiles);
@@ -51,10 +52,16 @@ for k = 1 : nFrames
     file = inputFiles{k};
     frame.cdata = imread(file);
     
+    imt = frame.cdata;
+    if numel(p.Results.crop) == 4
+        c = p.Results.crop;
+        imt = imt(c(1):c(3), c(2):c(4), :);
+    end
+    
     if numel(p.Results.reshapeSize) == 2
         im = zeros(p.Results.reshapeSize(1), p.Results.reshapeSize(2), 3, 'uint8');
         for i = 1:3
-            im(:,:,i) = imresize(frame.cdata(:,:,i), p.Results.reshapeSize);
+            im(:,:,i) = imresize(imt(:,:,i), p.Results.reshapeSize);
         end
         frame.cdata = im;
     end
