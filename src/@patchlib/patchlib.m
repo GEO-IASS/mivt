@@ -3,10 +3,15 @@ classdef patchlib < handle
     %   Currently still in development. 
     %
     %
+    %   5/31/2014
+    %   - added helper function:
+    %       guessPatchSize
+    %
     %   5/30/2014
     %   - added viewing functions: 
     %       patchlib.view.patchesInImage
     %       patchlib.view.patchMatches
+    %       patchlib.view.patches2D
     %   - adding test functions:
     %       patchlib.test.viewPatchesInImage
     %       patchlib.test.viewPatchMatches2D
@@ -19,7 +24,7 @@ classdef patchlib < handle
         % group view functions
         view = struct('patchesInImage', @patchlib.viewPatchesInImage, ...
             'patchMatches', @patchlib.viewPatchMatches, ...
-            'patches', @patchlib.viewPatches2D);
+            'patches2D', @patchlib.viewPatches2D);
         
         % group test functions
         test = struct('viewPatchesInImage', @patchlib.testViewPatchesInImage, ...
