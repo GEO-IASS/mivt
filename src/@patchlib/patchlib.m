@@ -10,13 +10,16 @@ classdef patchlib < handle
     %   - adding test functions:
     %       patchlib.test.viewPatchesInImage
     %       patchlib.test.viewPatchMatches2D
+    %
+    %   requires ifelse
     
     properties (Constant)
         default2DpatchSize = [5, 5];
         
         % group view functions
         view = struct('patchesInImage', @patchlib.viewPatchesInImage, ...
-            'patchMatches', @patchlib.viewPatchMatches);
+            'patchMatches', @patchlib.viewPatchMatches, ...
+            'patches', @patchlib.viewPatches2D);
         
         % group test functions
         test = struct('viewPatchesInImage', @patchlib.testViewPatchesInImage, ...
@@ -36,10 +39,14 @@ classdef patchlib < handle
         % viewers
         varargout = viewPatchesInImage(im, patchCenter, patchSize, interactive);
         viewPatchMatches2D(patchSize, origPatch, varargin);
+        viewPatches2D(patches, patchSize, caxisrange);
         
         % testers
         testViewPatchesInImage();
         testViewPatchMatches2D();
+        
+        % tools
+        patchSize = guessPatchSize(n, dim);
     end
     
 end
