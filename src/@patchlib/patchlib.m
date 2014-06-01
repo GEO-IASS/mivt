@@ -2,21 +2,9 @@ classdef patchlib < handle
     %PATCHLIB A library for working with patches
     %   Currently still in development. 
     %
+    %   See readme.md for updates and function list.
     %
-    %   5/31/2014
-    %   - added helper function:
-    %       guessPatchSize
-    %
-    %   5/30/2014
-    %   - added viewing functions: 
-    %       patchlib.view.patchesInImage
-    %       patchlib.view.patchMatches
-    %       patchlib.view.patches2D
-    %   - adding test functions:
-    %       patchlib.test.viewPatchesInImage
-    %       patchlib.test.viewPatchMatches2D
-    %
-    %   requires ifelse
+    %   requires several functions from mgt (https://github.com/adalca/mgt)
     
     properties (Constant)
         default2DpatchSize = [5, 5];
