@@ -21,4 +21,4 @@ function plotImages(fid, varargin)
     end
     
     % let MATLAB plot
-    pause(0.1);
+    drawnow();
