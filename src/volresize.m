@@ -1,6 +1,18 @@
 function vol = volresize(vol, sizeDstVol, interpMethod)
-% interpMethod - anything taken by interpn, e.g. linear or nearest
-%   as well as 'decimate', which decimates every second element starting with [2, 2, 2..]
+% VOLRESIZE resize N-dimentional volume
+%   vol = volresize(vol, sizeDstVol) resizes the volume vol to the size sizeDstVol.
+%   vol = volresize(vol, sizeDstVol, interpMethod) allows the specification of the interpolation
+%       method (default is 'linear')
+%       interpMethod can be anything taken by interpn(), e.g. linear or nearest, 
+%       or any of these extras:
+%       - 'nearestpatch' - for upsampling, use to upsample in blocks
+%       - 'decimate' [TODO]: decimates every second element starting with [2, 2, 2..]
+%    
+%   TODO: allow for both downsampling and upsampling (in different dimensions).
+%
+% See Also: imBlurSep, interpn
+%
+% Contact: adalca@csail.mit.edu
 
     % check inputs
     narginchk(2, 3);
@@ -15,32 +27,23 @@ function vol = volresize(vol, sizeDstVol, interpMethod)
     sizeVol(1:ndims(vol)) = size(vol); 
     isUpSampling = all(sizeVol <= sizeDstVol);
     isDownSampling = all(sizeVol >= sizeDstVol);
-    assert(isUpSampling || isDownSampling);
+    assert(isUpSampling || isDownSampling, 'please only downsample or upsample the volume');
     if (isUpSampling && isDownSampling) 
         return;
     end
+    isNearest = strcmp(interpMethod, 'nearest');
+    isNearestPatch = strcmp(interpMethod, 'nearestpatch');
 
-
-    % if down-sampling, do smoothing
-    if isDownSampling && ~isUpSampling && ~(strcmp(interpMethod, 'nearest'))
+    % if down-sampling, do a bit of smoothing first
+    if isDownSampling && ~isUpSampling && ~isNearest && ~isNearestPatch
         
         % blur the image. note the sigma factor is kind of arbritrary
-%         s = pi^2 / 8 * sizeDstVol./sizeVol;
+        % s = pi^2 / 8 * sizeDstVol./sizeVol;
         s = 1/4 * sizeVol ./ sizeDstVol;
         window = ceil(6 * s) + mod(ceil(6 * s), 2) + 1;
-        % nn for the edge padding
-        vol = imBlurSep(vol, window, s, ones(1, ndims(vol)), 'nn');     
         
-%         fftVol = fftn(double(vol));
-%         startVal = (floor(size(vol)/2) + 1) - ceil((sizeDstVol - 1)/2);
-%         endVal = startVal + sizeDstVol - 1; 
-%         fftVolCut = actionSubArray('extract', fftshift(fftVol), startVal, endVal);       
-% %         fftVolCutZeros = zeros(size(fftVol));
-% %         fftVolCutZeros = actionSubArray('insert', fftVolCutZeros, startVal, endVal, fftVolCut);
-% %         vol = ifftn(ifftshift(fftVolCutZeros), 'symmetric');
-%         ratio = prod(sizeDstVol./size(vol));
-%         vol = ifftn(ifftshift(fftVolCut), 'symmetric') .* ratio;
-%         return;
+        % nn here is for the edge padding with nearest neighbours, not interpolation
+        vol = imBlurSep(vol, window, s, ones(1, ndims(vol)), 'nn');     
     end
     
     % get the interpolation points in each dimensions
@@ -48,21 +51,33 @@ function vol = volresize(vol, sizeDstVol, interpMethod)
     for i = 1:ndims(vol)
         if sizeDstVol(i) > 1
             x{i} = linspace(1, size(vol,i), sizeDstVol(i));
+            
+            % nearest patch
+            if strcmp(interpMethod, 'nearestpatch')
+                assert(isUpSampling)
+                ratio = sizeDstVol(i) ./ sizeVol(i);
+                assert(isIntegerValue(ratio) && isodd(ratio));
+                m = (ratio - 1)./2;
+                
+                x{i} = [ones([1, m]), linspace(1, size(vol,i), sizeDstVol(i) - 2*m), ...
+                    ones([1, m]) * size(vol,i)];
+            end
         else
             x{i} = (size(vol, i)+1)/2;
         end
     end
-
+    
     % obtain a ndgrid (not meshgrid) for each dimension
     xi = cell(1, ndims(vol));
     [xi{:}] = ndgrid(x{:});
 
     % interpolate
+    if strcmp(interpMethod, 'nearestpatch')
+        interpMethod = 'nearest';
+    end
     vol = interpn(vol, xi{:}, interpMethod);
     
 end
-
-
 
 function sizeDst = checkInputSizes(sizeInput, sizeDst)
     nDimsDst = numel(sizeDst);
@@ -79,6 +94,15 @@ function sizeDst = checkInputSizes(sizeInput, sizeDst)
     end
     
     assert(nDimsInput == numel(sizeDst));
-    
-    
 end
+
+%   Old Method Attempt for if (isDownSampling) code via fourier transform
+%         fftVol = fftn(double(vol));
+%         startVal = (floor(size(vol)/2) + 1) - ceil((sizeDstVol - 1)/2);
+%         endVal = startVal + sizeDstVol - 1; 
+%         fftVolCut = actionSubArray('extract', fftshift(fftVol), startVal, endVal);       
+%         fftVolCutZeros = zeros(size(fftVol));
+%         fftVolCutZeros = actionSubArray('insert', fftVolCutZeros, startVal, endVal, fftVolCut);
+%         vol = ifftn(ifftshift(fftVolCutZeros), 'symmetric');
+%         ratio = prod(sizeDstVol./size(vol));
+%         vol = ifftn(ifftshift(fftVolCut), 'symmetric') .* ratio;
