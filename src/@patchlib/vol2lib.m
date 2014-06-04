@@ -2,17 +2,19 @@ function varargout = vol2lib(vol, patchSize, varargin)
 % VOL2LIB transform a volume into a patch library
 %   library = vol2lib(vol, patchSize) transform volume vol to a patch
 %   library. vol can be any dimensions (tested for 2, 3); patchSize is the size
-%   of the patch (nDims x 1 vector), library will be a nVoxels x prod(patchSize). 
-%   The index of the row is the index of the "top-left" corner of the patch.
-%   Note that since some patches will fall partly outside of the volume, and they will be excluded
+%   of the patch (nDims x 1 vector). 
 %
-%   Alternatively, vol can be a cell array of columes, in which case the library is computed for
+%   Alternatively, vol can be a cell array of volumes, in which case the library is computed for
 %   each volumes. library is then a cell array with as many entries as volumes.
 %
 %   library = vol2lib(vol, patchSize, kind) allow specification of how the volume is split via kind
-%       kind = 'sliding': default: patches are sliding, so maximally overlapping 
-%       kind = 'distinct': non-overlapping, grid-like setup. vol2lib will cut the volume to an 
-%       integral number of patches (TODO)
+%       kind = 'sliding': (default) patches are sliding, so maximally overlapping 
+%       kind = 'distinct': non-overlapping, grid-like setup. 
+%
+%   Note: in the sliding case, the number of patches will be roughly the number of voxels in
+%   the original volume minus those patches that would have started in the last (patchSize - 1)
+%   entries in each direction (since they wouldn't make complete patches). in the distinct case,
+%   vol2lib will cut the volume to an integral number of patches
 %
 %   [library, idx] = vol2lib(...) returns the index of the starting (top-left) point of every patch
 %       in the *original* image.
