@@ -22,16 +22,16 @@ classdef patchlib < handle
     end
     
     methods (Static)
-        
+        % library construction
         varargout = vol2lib(vol, patchSize, varargin);
-        varargout = vols2lib(vols, patchSize, returnEffectiveLibrary);
         varargout = volStruct2lib(volStruct, patchSize, returnEffectiveLibrary);
-        library = mrfVolStruct2lib(volStruct, patchSize, varargin);
-        s = patchCenterDist(patchSize);
+        
+        % mrf-related
+%         library = mrfVolStruct2lib(volStruct, patchSize, varargin);
         
         % viewers
         varargout = viewPatchesInImage(im, patchCenter, patchSize, interactive);
-        viewPatchMatches2D(patchSize, origPatch, varargin);
+        viewPatchMatches2D(origPatch, varargin);
         viewPatches2D(patches, patchSize, caxisrange);
         
         % testers
@@ -40,7 +40,7 @@ classdef patchlib < handle
         
         % tools
         patchSize = guessPatchSize(n, dim);
+%         s = patchCenterDist(patchSize);
     end
     
 end
-
