@@ -40,7 +40,7 @@ classdef patchlib < handle
         
         % tools
         patchSize = guessPatchSize(n, dim);
-%         s = patchCenterDist(patchSize);
+        s = patchCenterDist(patchSize);
     end
     
 end
