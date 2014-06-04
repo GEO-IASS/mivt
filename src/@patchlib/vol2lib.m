@@ -38,11 +38,13 @@ function varargout = vol2lib(vol, patchSize, varargin)
 
 
     % input check. default kind is sliding.
+    assert(isnumeric(vol), 'vol should be numeric');
     if nargin == 2
         varargin{1} = 'sliding';
     end
     kind = validatestring(varargin{1}, {'sliding', 'distinct'}, mfilename, 'kind', 3);
     nDims = numel(patchSize);
+    origSize = size(vol);
 
     % want to work with the effective reference size
     if strcmp(kind, 'sliding')
@@ -50,7 +52,7 @@ function varargout = vol2lib(vol, patchSize, varargin)
         library = zeros(numel(vol), prod(patchSize));
     else
         volSize = floor(size(vol) ./ patchSize) .* patchSize;
-        storeVolSize = size(vol) ./ patchSize;
+        storeVolSize = volSize ./ patchSize;
         vol = cropVolume(vol, ones(1, nDims), volSize);
         library = zeros(numel(vol) ./ prod(patchSize), prod(patchSize));
     end
@@ -103,7 +105,7 @@ function varargout = vol2lib(vol, patchSize, varargin)
         library(:, idx) = tempVol(:);
         
         % if output is requested and using 'discrete'
-        if nargout == 2 && strcmp(kind, 'discrete') && idx == 1
+        if nargout == 2 && strcmp(kind, 'distinct') && idx == 1
             idxVol = idxVol(shiftRanges{:});
         end
             
@@ -120,6 +122,8 @@ function varargout = vol2lib(vol, patchSize, varargin)
     if nargout == 2 
         if strcmp(kind, 'sliding')
             idxVol(nanIdx) = [];
+        else
+            idxVol = ind2ind(size(vol), origSize, idxVol(:));
         end
         assert(numel(idxVol) == size(library, 1), ...
             'Something went wrong with the library of index computation. Sizes don''t match.');
