@@ -21,7 +21,7 @@ function varargout = vol2lib(vol, patchSize, varargin)
 %
 % TODO: can probably speed up with smarter indexing. 
 %
-% See Also: im2col, ifelse
+% See Also: im2col, ifelse, ind2ind
 %
 % Contact: {adalca,klbouman}@csail.mit.edu
 
