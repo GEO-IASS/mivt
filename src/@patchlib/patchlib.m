@@ -41,6 +41,7 @@ classdef patchlib < handle
         % tools
         patchSize = guessPatchSize(n, dim);
         s = patchCenterDist(patchSize);
+        [idx, newVolSize, nPatches, overlap] = grid(volSize, patchSize, patchOverlap, varargin);
     end
     
 end
