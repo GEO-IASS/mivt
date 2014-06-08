@@ -28,4 +28,4 @@ Helper Functions
 - [`patchlib.overlapkind`](overlapkind.m) overlap amount to/from pre-specified overlap kind
 - [`patchlib.guessPatchSize`](guessPatchSize.m) guess the size of a patch from nVoxels
 - [`patchlib.patchCenterDist`](patchCenterDist.m) compute the distance to the center of a patch
-- [`patchlib.nPatches2volSize](nPatches2volSize.m)` volume size from number of patches
+- [`patchlib.nPatches2volSize`](nPatches2volSize.m)` volume size from number of patches
