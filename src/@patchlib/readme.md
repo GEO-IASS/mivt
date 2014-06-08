@@ -5,7 +5,7 @@ A library for working with patches, currently very much in development.
 
 Library Construction
 --------------------
-- `patchlib.vol2lib` transform a volume into a patch library
+- [`patchlib.vol2lib`](vol2lib.m) transform a volume into a patch library
 - `patchlib.volStruct2lib` transform a volStruct into a patch library
 - `patchlib.grid` grid of patch starting points for n-d volume
 
