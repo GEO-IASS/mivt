@@ -31,6 +31,8 @@ function [idx, newVolSize, nPatches, overlap] = grid(volSize, patchSize, patchOv
 %       number of patches in each direction, and the size of the overlap. The latter is useful is
 %       the 'kind' input was used.
 %
+%   TODO: could speed up for the special case of 2D or 3D?
+%
 % Contact: {adalca,klbouman}@csail.mit.edu
 
 

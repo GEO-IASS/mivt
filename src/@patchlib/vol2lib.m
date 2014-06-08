@@ -32,6 +32,8 @@ function varargout = vol2lib(vol, patchSize, varargin)
 %       for 1000 smaller calls: ~2.7s --> down to 0.7s
 %       for 10 big calls: 4.7s --> 2.5s
 %
+%   TODO: could speed up for the special case of 2D or 3D?
+%
 % See Also: grid, im2col, ifelse
 %
 % Contact: {adalca,klbouman}@csail.mit.edu
@@ -40,10 +42,12 @@ function varargout = vol2lib(vol, patchSize, varargin)
     if iscell(vol)
         varargout{1} = cell(numel(vol), 1);
         idx = cell(numel(vol), 1);
+        sizes = cell(numel(vol), 1);
         for i = 1:numel(vol)
-            [varargout{1}{i}, idx{i}] = patchlib.vol2lib(vol{i}, patchSize, varargin{:});
+            [varargout{1}{i}, idx{i}, sizes{i}] = patchlib.vol2lib(vol{i}, patchSize, varargin{:});
         end
         if nargout == 2, varargout{2} = idx; end
+        if nargout == 2, varargout{3} = sizes; end
         return
     end
     

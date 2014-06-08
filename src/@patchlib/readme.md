@@ -21,5 +21,6 @@ Test Functions
 
 Helper Functions
 ----------------
+- `patchlib.grid` grid of patch starting points for n-d volume
 - `patchlib.guessPatchSize` guess the size of a patch from nVoxels
 - `patchlib.patchCenterDist` compute the distance to the center of a patch
