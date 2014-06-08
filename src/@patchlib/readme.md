@@ -8,7 +8,7 @@ Library Construction
 --------------------
 - [`patchlib.vol2lib`](vol2lib.m) transform a volume into a patch library
 - [`patchlib.volStruct2lib`](volStruct2lib.m) transform a volStruct into a patch library
-- [`patchlib.grid`]('grid.m') grid of patch starting points for n-d volume
+- [`patchlib.grid`](grid.m) grid of patch starting points for n-d volume
 
 Viewing Functions
 -----------------
