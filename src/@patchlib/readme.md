@@ -14,7 +14,7 @@ Viewing Functions
 -----------------
 - [`patchlib.view.patchesInImage`](viewPatchesInImage.m) visualize 2D patches in an image
 - [`patchlib.view.patchMatches2D`](viewPatchMatches2D.m) display 2D patches matching an original patch
-- [`patchlib.view.patches2D`](viewPatches2d.m) show 2D patches in a subplot grid
+- [`patchlib.view.patches2D`](viewPatches2D.m) show 2D patches in a subplot grid
 
 Test Functions
 --------------
