@@ -1,32 +1,41 @@
 function varargout = vol2lib(vol, patchSize, varargin)
 % VOL2LIB transform a volume into a patch library
 %   library = vol2lib(vol, patchSize) transform volume vol to a patch
-%   library. vol can be any dimensions (tested for 2, 3); patchSize is the size
-%   of the patch (nDims x 1 vector). 
+%       library. vol can be any dimensions (tested for 2, 3); patchSize is the size
+%       of the patch (nDims x 1 vector). 
 %
-%   Alternatively, vol can be a cell array of volumes, in which case the library is computed for
-%   each volumes. library is then a cell array with as many entries as volumes.
+%       Alternatively, vol can be a cell array of volumes, in which case the library is computed for
+%       each volumes. library is then a cell array with as many entries as volumes.
 %
-%   library = vol2lib(vol, patchSize, kind) allow specification of how the volume is split via kind
-%       kind = 'sliding': (default) patches are sliding, so maximally overlapping 
-%       kind = 'distinct': non-overlapping, grid-like setup. 
+%   library = vol2lib(vol, patchSize, overlap) allow specification of how the overlap between
+%       patches: a scalar, vector (of size [1xnDims]) or a string for a pre-specified configuration,
+%       like 'sliding', 'discrete', or 'mrf'. see patchlib.grid for details of the supported overlap
+%       kinds. If not specified (i.e. function has only 2 inputs), default overlap is 'sliding'.
 %
-%   Note: in the sliding case, the number of patches will be roughly the number of voxels in
-%   the original volume minus those patches that would have started in the last (patchSize - 1)
-%   entries in each direction (since they wouldn't make complete patches). in the distinct case,
-%   vol2lib will cut the volume to an integral number of patches
+%   Note: vol2lib will cut the volume to fit the right number of patches.
 %
 %   [library, idx] = vol2lib(...) returns the index of the starting (top-left) point of every patch
-%       in the *original* image.
+%       in the *original* volume.
 %
-% TODO: can probably speed up with smarter indexing. 
+%   [library, idx, libVolSize] = vol2lib(...) returns the size of the volumes size, which is smaller
+%       than or equal to the size of vol. It will be smaller than the initial volume if the volume
+%       had to be 
 %
-% See Also: im2col, ifelse, ind2ind
+%   Current Algorithm:
+%       Initiate by getting a first 'grid' of the top left index of every patch
+%       Iterate: shift through all the indexes in a patch (1:prod(patchSize)) 
+%       - get the appropriate grid
+%           e.g. the second iteration gives us the second point in every patch
+%       - stack the grids [horzcat] in a library of indexes
+%       use this library of indexes to index into the volume, giving the final library
+%   This method was optimized over several versions. History of performance:
+%       for 1000 smaller calls: ~2.7s --> down to 0.7s
+%       for 10 big calls: 4.7s --> 2.5s
+%
+% See Also: grid, im2col, ifelse
 %
 % Contact: {adalca,klbouman}@csail.mit.edu
-
-    narginchk(2, 3);
-
+   
     % if vol is a cell, recursively compute the libraries for each cell. 
     if iscell(vol)
         varargout{1} = cell(numel(vol), 1);
@@ -37,98 +46,89 @@ function varargout = vol2lib(vol, patchSize, varargin)
         if nargout == 2, varargout{2} = idx; end
         return
     end
-
-
-    % input check. default kind is sliding.
-    assert(isnumeric(vol), 'vol should be numeric');
+    
+    
     if nargin == 2
         varargin{1} = 'sliding';
     end
-    kind = validatestring(varargin{1}, {'sliding', 'distinct'}, mfilename, 'kind', 3);
-    nDims = numel(patchSize);
-    origSize = size(vol);
-
-    % want to work with the effective reference size
-    if strcmp(kind, 'sliding')
-        storeVolSize = size(vol) - patchSize + 1;
-        library = zeros(numel(vol), prod(patchSize));
-    else
-        volSize = floor(size(vol) ./ patchSize) .* patchSize;
-        storeVolSize = volSize ./ patchSize;
-        vol = cropVolume(vol, ones(1, nDims), volSize);
-        library = zeros(numel(vol) ./ prod(patchSize), prod(patchSize));
-    end
-
-    % get the class of the volume, and then work in double
-    origVolumeClass = class(vol);
-    vol = double(vol);
-
-    % keep off-setting the volume to create the library automatically by stacking
-    sub = cell(nDims, 1);
-    [sub{:}] = ind2sub(patchSize, 1:prod(patchSize));
+    nDims = ndims(vol);
+    volSize = size(vol);
     
-    % if requiring index output, prepare the index volume to sub-sample.
-    if nargout == 2
-        idxVol = reshape(1:numel(vol), size(vol));
+    % get the index and subscript of the initial grid
+    [initidx, cropVolSize] = patchlib.grid(volSize, patchSize, varargin{:}); 
+    initsub = cell(1, nDims);
+    [initsub{:}] = ind2sub(volSize, initidx);
+    vol = cropVolume(vol, cropVolSize);
+    
+    
+    % get all of the shifts in a [prod(patchSize) x nDims] subscript matrix
+    shift = cell(1, nDims);
+    [shift{:}] = ind2sub(patchSize, (1:prod(patchSize))');
+    shift = [shift{:}];
+    
+    % initialize library of subscripts into the volume
+    sub = cell(numel(patchSize), 1);
+    for dim = 1:numel(patchSize)
+        sub{dim} = zeros(numel(initidx), prod(patchSize));
     end
     
-    % go through the possible offsets
-    for idx = 1:prod(patchSize)
+    % go through each shift
+    for s = 1:prod(patchSize)
         
-        % copy the volume
-        tempVol = vol;
-        
-        % shift the volume appropriately
-        shiftRanges = cell(nDims, 1);
-        for d1 = 1:nDims 
-            
-            % compute the range for which to insert nans
-            nanRange = cell(nDims, 1);
-            for d2 = 1:nDims
-                s = sub{d2};
-                if d2 == d1
-                    nanRange{d2} = 1:(s(idx)-1);
-                else
-                    nanRange{d2} = 1:size(vol, d2);
-                end
-            end
-            
-            tempVol(nanRange{:}) = nan;
-            
-            % compute the range for shifting in this dimension
-            s = sub{d1};
-            step = ifelse(strcmp(kind, 'sliding'), 1, patchSize(d1));
-            range = [s(idx):size(vol, d1), 1:(s(idx) - 1)];
-            shiftRanges{d1} = range(1:step:end);
+        % update subscript library
+        for dim = 1:numel(patchSize)
+            sub{dim}(:, s) = initsub{dim}(:) + shift(s, dim) - 1;
         end
-        tempVol = tempVol(shiftRanges{:});
-        
-        % insert the shifted volume to the library
-        library(:, idx) = tempVol(:);
-        
-        % if output is requested and using 'discrete'
-        if nargout == 2 && strcmp(kind, 'distinct') && idx == 1
-            idxVol = idxVol(shiftRanges{:});
-        end
-            
     end
     
-    % take out nan patches (i.e. only return patches originating in the
-    % effective library) if returnEffectiveLibrary
-    nanIdx = isnan(sum(library, 2));
-    library(nanIdx, :) = [];
-    assert(size(library, 1) == prod(storeVolSize));   
-    varargout{1} = cast(library, origVolumeClass); 
+    % for each dimension, put the subscript library in a vector
+    for dim = 1:numel(patchSize)
+        sub{dim} = sub{dim}(:);
+    end
+    
+    % compute the library of linear indexes into the volume
+    idxvec = sub2ind(cropVolSize, sub{:});
+    idx = reshape(idxvec, [numel(initidx), prod(patchSize)]);
+    
+    % 
+    library = vol(idx(:));
+    library = reshape(library, size(idx));
+    
+    varargout{1} = library; 
     
     % prepare the index output, if necessary
     if nargout == 2 
-        if strcmp(kind, 'sliding')
-            idxVol(nanIdx) = [];
-        else
-            idxVol = ind2ind(size(vol), origSize, idxVol(:));
-        end
-        assert(numel(idxVol) == size(library, 1), ...
+        assert(numel(initidx) == size(library, 1), ...
             'Something went wrong with the library of index computation. Sizes don''t match.');
-        varargout{2} = idxVol(:);
+        varargout{2} = initidx(:);
+    end
+    
+    % prepare the new volume output, if necessary
+    if nargout == 3
+        varargout{3} = cropVolSize;
+    end
+end
+
+
+
+function [vol, patchSize, olap] = parseInputs(vol, patchSize, varargin)
+
+    narginchk(2, 4);
+    
+    assert(isnumeric(vol), 'Volume vol should be numeric');
+    if nargin == 2
+        varargin{1} = 'sliding';
+    end
+%     kind = validatestring(varargin{1}, {'sliding', 'distinct'}, mfilename, 'kind', 3);
+
+    switch varargin{1}
+        case 'sliding'
+            olap = patchSize - 1;
+        case 'olap'
+            olap = varargin{2};
+        case 'discrete'
+            olap = 0;
+        otherwise
+            eror('unknown overlap kind');
     end
 end
