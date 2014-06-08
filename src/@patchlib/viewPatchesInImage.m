@@ -1,14 +1,17 @@
-function varargout = viewPatchesInImage(im, patchCenters, patchSize, interactive)
+function varargout = viewPatchesInImage(im, patchLoc, patchSize, varargin)
 % VIEWPATCHESINIMAGE visualize 2D patches in an image
-%   viewPatchesInImage(im, patchCenters, patchSize) visualize 2D patches given by patchCenters 
+%   viewPatchesInImage(im, patchLoc, patchSize) visualize 2D patches given by patchLoc 
 %   as part of the given image im. Half of the resulting figure will display the image, with colored
 %   rectangles indicating patch locations. The other half of the resulting figure will show the
-%   patches organized in a grid. 
+%   patches organized in a subplot grid. 
 %       im: the 2D image (grayscale or rgb)
-%       patchCenters: [nPatches x 2] matrix
+%       patchLoc: [nPatches x 2] matrix
 %       patchSize: [1 x 2] vector of the size of the patches
 %
-%   viewPatchesInImage(im, patchCenters, patchSize, true) allows for interactive patch creation and
+%   viewPatchesInImage(..., patchIndexing) allows to specify if patch indexing should be 'top-left'
+%       (default) or 'center'
+%
+%   viewPatchesInImage(..., true) allows for interactive patch creation and
 %   deletion:
 %       left-click in the image subplot will create a patch centered at the location
 %       left-click in a patch subplot will de-select (remove rectangles) of that patch
@@ -26,9 +29,9 @@ function varargout = viewPatchesInImage(im, patchCenters, patchSize, interactive
 %   Example: [see more @ patchlib.testViews()]
 %       im = imresize(im2double(imread('peppers.png')), [75, 75]);
 %       pv = patchlib.view;
-%       patchCenters = [7, 7; 25, 23; 17, 29; 37, 13; 10, 10];
+%       patchLoc = [7, 7; 25, 23; 17, 29; 37, 13; 10, 10];
 %       patchSize = [7, 7];
-%       pv.patchesInImage(im, patchCenters, patchSize);
+%       pv.patchesInImage(im, patchLoc, patchSize);
 %
 % Notes:
 %   - Coding: we use 100 character line limit
@@ -38,17 +41,30 @@ function varargout = viewPatchesInImage(im, patchCenters, patchSize, interactive
 %
 % Contact: adalca@csail.mit.edu
     
+    
+    narginchk(3, 5);
+    
     % interactive mode
-    if nargin == 4 && interactive
-        % unfortunately, need to close all other windows -- otherwise, 
-        % when closing the current window in interactive mode crashes matlab with a system error.
-        % > figure(1); figure(2); ginput(); 
-        % followed by a close of figure 2 causes such a crash :(
-        close all force;
+    interactive = false;
+    if nargin == 4 && islogical(varargin{1}) || nargin == 5 && islogical(varargin{2})
+        interactive = varargin{end};
+        if interactive
+            % unfortunately, need to close all other windows -- otherwise, 
+            % when closing the current window in interactive mode crashes matlab with a system error.
+            % > figure(1); figure(2); ginput(); 
+            % followed by a close of figure 2 causes such a crash :(
+            close all force;
+        end
+    end
+    
+    % patch indexing mode
+    idxmode = 'top-left';
+    if nargin >= 4 && ischar(varargin{1})
+        idxmode = varargin{1};
     end
 
     % setup
-    nPatches = size(patchCenters, 1);
+    nPatches = size(patchLoc, 1);
     nMaxUniqueColors = 10000;
     setup.nElems = max(ceil(sqrt(nPatches)), 1);
     setup.colors = jitter(nMaxUniqueColors);
@@ -63,7 +79,7 @@ function varargout = viewPatchesInImage(im, patchCenters, patchSize, interactive
     patches(1) = [];
     if nPatches > 0
         for i = 1:nPatches
-            patches(i) = computePatch(patchCenters(i, :), patchSize, im);
+            patches(i) = computePatch(patchLoc(i, :), patchSize, im, idxmode);
         end
     end
     
@@ -74,7 +90,7 @@ function varargout = viewPatchesInImage(im, patchCenters, patchSize, interactive
     figure(setup.h.main);
     
     % start interactive process if requested.
-    while nargin == 4 && interactive
+    while interactive
         subplot(1, 2, 1);
         mainmsg = 'Click in main image (left subplot): add patch centered at click';
         patchmsg = 'Click on patch in patches grid: Left-click: ''deselect'', Right-click: delete';
@@ -94,7 +110,7 @@ function varargout = viewPatchesInImage(im, patchCenters, patchSize, interactive
                 
                 % if clicked on the main image, generate a new patch centered on click
                 case setup.h.image
-                    patch = computePatch([y, x], patchSize, im);
+                    patch = computePatch([y, x], patchSize, im, idxmode);
                     nPatches = nPatches + 1;
                     newNElems = ceil(sqrt(nPatches));
                     
@@ -180,18 +196,26 @@ function varargout = viewPatchesInImage(im, patchCenters, patchSize, interactive
 end
 
 
-function patch = computePatch(patchCenter, patchSize, im)
+function patch = computePatch(patchLoc, patchSize, im, idxmode)
 % compute the patch struct. 
 %   patch.vol - extracted patch from image
 %   patch.setart - starting corner of the patch in the image
 %   empty fields: rectInImage, rect, colidx. These will be assigned at drawing time.
-
-    s = patchCenter - (patchSize - 1) / 2;
-    x = s(1): (s(1) + patchSize(1) - 1);
-    y = s(2): (s(2) + patchSize(2) - 1);
+    
+    switch idxmode
+        case 'center'
+            s = patchLoc - (patchSize - 1) / 2;
+        case 'top-left'
+            s = patchLoc;
+        otherwise
+            error('wrong indexing mode: %s', idxmode);
+    end
+    e = s + patchSize - 1;        
+    x = s(1):e(1);
+    y = s(2):e(2);
     patch.vol = im(x, y, :);
     patch.start = [s(1)-0.5, s(2)-0.5];
-    patch.center = patchCenter;
+    patch.center = patchLoc;
     
     patch.rectInImage = [];
     patch.rect = [];

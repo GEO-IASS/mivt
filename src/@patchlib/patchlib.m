@@ -16,7 +16,8 @@ classdef patchlib < handle
         
         % group test functions
         test = struct('viewPatchesInImage', @patchlib.testViewPatchesInImage, ...
-            'viewPatchMatches2D', @patchlib.testViewPatchMatches2D);
+            'viewPatchMatches2D', @patchlib.testViewPatchMatches2D, ...
+            'grid', @patchlib.testGrid);
 
         figview = ifelse(exist('figuresc', 'file') == 2, @figuresc, @figure);
     end
@@ -25,23 +26,27 @@ classdef patchlib < handle
         % library construction
         varargout = vol2lib(vol, patchSize, varargin);
         varargout = volStruct2lib(volStruct, patchSize, returnEffectiveLibrary);
+        [idx, newVolSize, nPatches, overlap] = grid(volSize, patchSize, patchOverlap, varargin);
         
         % mrf-related
 %         library = mrfVolStruct2lib(volStruct, patchSize, varargin);
         
         % viewers
-        varargout = viewPatchesInImage(im, patchCenter, patchSize, interactive);
+        varargout = viewPatchesInImage(im, patchLoc, patchSize, varargin)
         viewPatchMatches2D(origPatch, varargin);
         viewPatches2D(patches, patchSize, caxisrange);
         
         % testers
         testViewPatchesInImage();
         testViewPatchMatches2D();
+        testGrid();
         
         % tools
         patchSize = guessPatchSize(n, dim);
+        [nPatches, newVolSize] = patchcount(volSize, patchSize, patchOverlap, varargin)
         s = patchCenterDist(patchSize);
-        [idx, newVolSize, nPatches, overlap] = grid(volSize, patchSize, patchOverlap, varargin);
+        overlap = overlapkind(str, patchSize);
+        volSize = nPatches2volSize(nPatches, patchSize, varargin)
     end
     
 end
