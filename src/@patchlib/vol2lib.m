@@ -2,7 +2,10 @@ function varargout = vol2lib(vol, patchSize, varargin)
 % VOL2LIB transform a volume into a patch library
 %   library = vol2lib(vol, patchSize) transform volume vol to a patch
 %       library. vol can be any dimensions (tested for 2, 3); patchSize is the size
-%       of the patch (nDims x 1 vector). 
+%       of the patch (nDims x 1 vector). The default assumption is that the patches overlap
+%       by (patchSize - 1) (i.e. 'sliding' patches). See below for options on changing this. 
+%       The size of the library is then the number of patches that fit in the image x number
+%       of voxels in the patch.
 %
 %       Alternatively, vol can be a cell array of volumes, in which case the library is computed for
 %       each volumes. library is then a cell array with as many entries as volumes.
