@@ -13,7 +13,7 @@ function varargout = viewPatchesInImage(im, patchLoc, patchSize, varargin)
 %
 %   viewPatchesInImage(..., true) allows for interactive patch creation and
 %   deletion:
-%       left-click in the image subplot will create a patch centered at the location
+%       left-click in the image subplot will create a patch base on that location
 %       left-click in a patch subplot will de-select (remove rectangles) of that patch
 %       right-click in the patch subplot will remove that patch.
 %
@@ -21,7 +21,7 @@ function varargout = viewPatchesInImage(im, patchLoc, patchSize, varargin)
 %   fields:
 %       vol - the patch volume
 %       start - the starting point in the image space as drawn on the canvas
-%       center - the patch center
+%       loc - the patch location
 %       rectInImage - the object handle of the drawn rectangle in the Image space
 %       rect - the rectangle object handle in the patch rendering
 %       color - [1 x 3] rgb color used to draw the rectangle for this patch.
@@ -75,7 +75,7 @@ function varargout = viewPatchesInImage(im, patchLoc, patchSize, varargin)
     
     % extract patches
     patches = ...
-        struct('vol', [], 'start', [], 'center', [], 'rectInImage', [], 'rect', [], 'colidx', []);
+        struct('vol', [], 'start', [], 'loc', [], 'rectInImage', [], 'rect', [], 'colidx', []);
     patches(1) = [];
     if nPatches > 0
         for i = 1:nPatches
@@ -92,7 +92,7 @@ function varargout = viewPatchesInImage(im, patchLoc, patchSize, varargin)
     % start interactive process if requested.
     while interactive
         subplot(1, 2, 1);
-        mainmsg = 'Click in main image (left subplot): add patch centered at click';
+        mainmsg = 'Click in main image (left subplot): add patch located at click';
         patchmsg = 'Click on patch in patches grid: Left-click: ''deselect'', Right-click: delete';
         title(sprintf('%s\n%s\n', mainmsg, patchmsg));
         
@@ -108,7 +108,7 @@ function varargout = viewPatchesInImage(im, patchLoc, patchSize, varargin)
             
             switch clickedAx      
                 
-                % if clicked on the main image, generate a new patch centered on click
+                % if clicked on the main image, generate a new patch based on click
                 case setup.h.image
                     patch = computePatch([y, x], patchSize, im, idxmode);
                     nPatches = nPatches + 1;
@@ -215,7 +215,7 @@ function patch = computePatch(patchLoc, patchSize, im, idxmode)
     y = s(2):e(2);
     patch.vol = im(x, y, :);
     patch.start = [s(1)-0.5, s(2)-0.5];
-    patch.center = patchLoc;
+    patch.loc = patchLoc;
     
     patch.rectInImage = [];
     patch.rect = [];
