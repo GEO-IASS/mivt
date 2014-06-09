@@ -28,16 +28,17 @@ classdef patchlib < handle
         varargout = volStruct2lib(volStruct, patchSize, returnEffectiveLibrary);
         [idx, newVolSize, nPatches, overlap] = grid(volSize, patchSize, patchOverlap, varargin);
         
-        % mrf-related
-%         library = mrfVolStruct2lib(volStruct, patchSize, varargin);
+        % quilting
+        vol = quilt(library, nnIdx, targetInfo, varargin);
         
         % viewers
         varargout = viewPatchesInImage(im, patchLoc, patchSize, varargin)
         viewPatchMatches2D(origPatch, varargin);
         viewPatches2D(patches, patchSize, caxisrange);
         
+        
         % testers
-        testViewPatchesInImage();
+        testViewPatchesInImage(tid);
         testViewPatchMatches2D();
         testGrid();
         

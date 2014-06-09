@@ -96,6 +96,7 @@ function varargout = vol2lib(vol, patchSize, varargin)
     
     % compute the library of linear indexes into the volume
     idxvec = sub2ind(cropVolSize, sub{:});
+    clear sub;
     idx = reshape(idxvec, [numel(initidx), prod(patchSize)]);
     
     % 
