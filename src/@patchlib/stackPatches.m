@@ -1,5 +1,4 @@
 function varargout = stackPatches(patches, patchSize, nPatches, varargin)
-% draft.
 % STACKPATCHES stack patches in layer structure
 %   layers = stackPatches(patches, patchSize, nPatches) stack given patches in a layer structure.
 %       - patchSize is a vector indicating the size of the patch. Let V = prod(patchSize);
