@@ -79,7 +79,7 @@ function varargout = viewPatchesInImage(im, patchLoc, patchSize, varargin)
     patches(1) = [];
     if nPatches > 0
         for i = 1:nPatches
-            patches(i) = computePatch(patchLoc(i, :), patchSize, im, idxmode);
+            patches(i) = prepDrawPatch(patchLoc(i, :), patchSize, im, idxmode);
         end
     end
     
@@ -110,7 +110,7 @@ function varargout = viewPatchesInImage(im, patchLoc, patchSize, varargin)
                 
                 % if clicked on the main image, generate a new patch based on click
                 case setup.h.image
-                    patch = computePatch([y, x], patchSize, im, idxmode);
+                    patch = prepDrawPatch([y, x], patchSize, im, idxmode);
                     nPatches = nPatches + 1;
                     newNElems = ceil(sqrt(nPatches));
                     
@@ -196,7 +196,7 @@ function varargout = viewPatchesInImage(im, patchLoc, patchSize, varargin)
 end
 
 
-function patch = computePatch(patchLoc, patchSize, im, idxmode)
+function patch = prepDrawPatch(patchLoc, patchSize, im, idxmode)
 % compute the patch struct. 
 %   patch.vol - extracted patch from image
 %   patch.setart - starting corner of the patch in the image

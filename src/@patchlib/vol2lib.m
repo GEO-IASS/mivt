@@ -18,12 +18,10 @@ function varargout = vol2lib(vol, patchSize, varargin)
 %
 %   Note: vol2lib will cut the volume to fit the right number of patches.
 %
-%   [library, idx] = vol2lib(...) returns the index of the starting (top-left) point of every patch
-%       in the *original* volume.
-%
-%   [library, idx, libVolSize] = vol2lib(...) returns the size of the volumes size, which is smaller
-%       than or equal to the size of vol. It will be smaller than the initial volume if the volume
-%       had to be 
+%   [library, idx, libVolSize, nPatches] = vol2lib(...) returns the index of the starting (top-left)
+%       point of every patch in the *original* volume, and the size of the volumes size, which is
+%       smaller than or equal to the size of vol. It will be smaller than the initial volume if the
+%       volume had to be cropped. Also returns the number of patches nPatches.
 %
 %   Current Algorithm:
 %       Initiate by getting a first 'grid' of the top left index of every patch
@@ -63,7 +61,7 @@ function varargout = vol2lib(vol, patchSize, varargin)
     volSize = size(vol);
     
     % get the index and subscript of the initial grid
-    [initidx, cropVolSize] = patchlib.grid(volSize, patchSize, varargin{:}); 
+    [initidx, cropVolSize, nPatches] = patchlib.grid(volSize, patchSize, varargin{:}); 
     initsub = cell(1, nDims);
     [initsub{:}] = ind2sub(volSize, initidx);
     vol = cropVolume(vol, cropVolSize);
@@ -99,45 +97,17 @@ function varargout = vol2lib(vol, patchSize, varargin)
     clear sub;
     idx = reshape(idxvec, [numel(initidx), prod(patchSize)]);
     
-    % 
+    % compute final library
     library = vol(idx(:));
     library = reshape(library, size(idx));
+
+    % check final library size
+    assert(numel(initidx) == size(library, 1), ...
+        'Something went wrong with the library of index computation. Sizes don''t match.');
+    assert(prod(nPatches) == size(library, 1), ...
+        'Something went wrong with the library of index computation. Sizes don''t match.');
     
-    varargout{1} = library; 
-    
-    % prepare the index output, if necessary
-    if nargout == 2 
-        assert(numel(initidx) == size(library, 1), ...
-            'Something went wrong with the library of index computation. Sizes don''t match.');
-        varargout{2} = initidx(:);
-    end
-    
-    % prepare the new volume output, if necessary
-    if nargout == 3
-        varargout{3} = cropVolSize;
-    end
-end
-
-
-
-function [vol, patchSize, olap] = parseInputs(vol, patchSize, varargin)
-
-    narginchk(2, 4);
-    
-    assert(isnumeric(vol), 'Volume vol should be numeric');
-    if nargin == 2
-        varargin{1} = 'sliding';
-    end
-%     kind = validatestring(varargin{1}, {'sliding', 'distinct'}, mfilename, 'kind', 3);
-
-    switch varargin{1}
-        case 'sliding'
-            olap = patchSize - 1;
-        case 'olap'
-            olap = varargin{2};
-        case 'discrete'
-            olap = 0;
-        otherwise
-            eror('unknown overlap kind');
-    end
+    % outputs
+    outputs = {library, initidx(:), cropVolSize, nPatches};
+    varargout = outputs(1:nargout); 
 end

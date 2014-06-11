@@ -1,4 +1,4 @@
-function viewPatches2D(patches, patchSize, caxisrange)
+function varargout = viewPatches2D(patches, patchSize, caxisrange)
 % VIEWPATCHES show 2D patches in a subplot grid
 %   viewPatches(patches, patchSize) show 2D patches in a subplot grid. patchSize is a [1 x 2] vector
 %   indicating the size of the patches. Given nPixels = prod(patchSize); patches is a 
@@ -9,6 +9,10 @@ function viewPatches2D(patches, patchSize, caxisrange)
 %
 %   viewPatches(patches, patchSize, caxisrange) allows the specification of color axis (e.g. [0, 1])
 %   for the patches.
+%
+%   h = viewPatches(...) returns the hangle of the figure
+%
+%   [h, nElems] = viewPatches(...) also returns the number of rows/columns of subplots.
 %
 % See Also: guessPatchSize
 %
@@ -31,11 +35,19 @@ function viewPatches2D(patches, patchSize, caxisrange)
     nElems = ceil(sqrt(nPatches));
     
     % show patches in subplots.
-    patchlib.figview();
+    h = patchlib.figview();
     for i = 1:nPatches
         subplot(nElems, nElems, i);
         patch = reshape(patches(i, :), patchSize);
         imshow(patch);
         caxis(caxisrange);
+        title(sprintf('%d', i));
     end
     
+    if nargout > 0
+        varargout{1} = h;
+    end
+    
+    if nargout == 2
+        varargout{2} = nElems;
+    end
