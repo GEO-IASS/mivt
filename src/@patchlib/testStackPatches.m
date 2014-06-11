@@ -27,23 +27,22 @@ function testStackPatches(varargin)
     % prepare tests
     [testids, im, noisyim, patchSize] = setup(varargin{:});
     
-    % build the image and noisy iamge libraries
+    % build the original and noisy image libraries
     [lib, ~, ~, nPatches] = patchlib.vol2lib(im, patchSize);
     noisylib = patchlib.vol2lib(noisyim, patchSize);
     
-    % do knn search for first match
+    % do knn search for each patch in noisy image
     pIdx = knnsearch(lib, noisylib, 'K', 1);
     
-    % extract patches in a nPatches x voxels
+    % extract patches in a [nPatches x V] matrix, where V == prod(patchSize)
     patches = patchlib.lib2patches(lib, pIdx, patchSize);
     
-    % assemble the votes of the first NNs
+    % assemble the patches into layers
     layers = patchlib.stackPatches(patches, patchSize, nPatches);
     
     %%% Test 1
     if ismember(1, testids)
         patchlib.viewLayers2D(layers, 'discrete', patchSize);
-
     end
     
     %%% Test 2
