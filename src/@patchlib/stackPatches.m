@@ -1,11 +1,12 @@
 function varargout = stackPatches(patches, patchSize, nPatches, varargin)
+% draft.
 % STACKPATCHES stack patches in layer structure
 %   layers = stackPatches(patches, patchSize, nPatches) stack given patches in a layer structure.
-%       - patchSize is a vector indicating the size of the patch. Let M = prod(patchSize);
+%       - patchSize is a vector indicating the size of the patch. Let V = prod(patchSize);
 %       - nPatches is a vector with the number of patches in each direction in the volume. 
 %       Let N = prod(nPatches). Together, patchSize, nPatches and the patch overlap (see below),
 %       indicate how the patches will be layed out. 
-%       - patches is then [N x M x K], with patches(i, :, K) indicates K patch candidates at 
+%       - patches is then [N x V x K], with patches(i, :, K) indicates K patch candidates at 
 %           location i (e.g. the result of a 3-nearest neightbours search).
 %       - patches are assumed to have a 'sliding' overlap (i.e. patchSize - 1) -- see below for
 %       specifying overlap amounts. patches can also be [N x prod(patchSize) x K], representing K
@@ -19,18 +20,20 @@ function varargout = stackPatches(patches, patchSize, nPatches, varargin)
 %       For more information about the interplay between patchSize, nPatches and patchOverlap, see
 %       patchlib.grid.
 %
-%   layes = stackPatches(patches, patchSize, targetSize) allows for the specification of the target
-%   image 
+%   layers = stackPatches(patches, patchSize, targetSize) allows for the specification of the target
+%       image size instead of the number of patches.
 %
+%   layers = stackPatches(..., patchOverlap) allows for the specification of patch overlap amount or
+%       kind. Default is 'sliding'. see patchlib.overlapkind for more information
 %
+%   [layers, idxmat, pLayerIdx] = stackPatches(...) also returns idxmat, a matrix the same size as
+%       'layers' containing linear indexes into the inputted patches matrix. This is useful if the
+%       user wants to, say, create a layer structure of patch weights to match the patches layer
+%       structure. pLayerIdx is a [V x 1] vector indicating the layer index of each input patch.
 %
-% coult take targetSize instead of nPatches. Then, if prod(nPatches) == size(patchIdx, 1), then we
-%   know it's nPatches. Otherwise, it's targetSize. 
-%   (and we can verify against the nPatches2volSize result, or just check that the patchlib.grid result is the right number of entries.)
-%
-% 
-%
-% todo: compute more efficient layer structure based on maximum connectivity/overlap
+% TODO: Need to compute more efficient layer structure based on maximum connectivity/overlap
+%   
+% Contact: {adalca,klbouman}@csail.mit.edu
     
     % input checking
     narginchk(3, 4);
@@ -94,6 +97,7 @@ function varargout = stackPatches(patches, patchSize, nPatches, varargin)
         end
     end
     
+    % setup outputs
     varargout{1} = layers;
     
     if nargout == 2
