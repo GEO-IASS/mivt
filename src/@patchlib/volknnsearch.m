@@ -57,13 +57,13 @@ function [refs, srcoverlap, refoverlap, varargin] = parseinputs(refs, varargin)
     end
 
     srcoverlap = {};
-    if numel(varargin) > 1 && isvalidoverlap(varargin{1})
+    if numel(varargin) > 1 && patchlib.isvalidoverlap(varargin{1})
         srcoverlap = varargin(1);
         varargin = varargin(2:end);
     end
     
     refoverlap = {};
-    if numel(varargin) > 1 && isvalidoverlap(varargin{1})
+    if numel(varargin) > 1 && patchlib.isvalidoverlap(varargin{1})
         refoverlap = varargin(1);
         varargin = varargin(2:end);
     end
