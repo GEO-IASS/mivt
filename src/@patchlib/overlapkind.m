@@ -14,6 +14,7 @@ function overlap = overlapkind(str, patchSize)
 %
 % Contact: adalca@csail.mit.edu
 
+    assert(patchlib.isvalidoverlap(str));
 
     if ischar(str)
         switch str
