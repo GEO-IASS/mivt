@@ -29,7 +29,7 @@ function [idx, newVolSize, nPatches, overlap] = grid(volSize, patchSize, varargi
 %       e.g. if startSub is [2, 2], then only vol(2:end, 2:end) will be included.
 %
 %   sub = grid(..., patchOverlap/kind, 'sub') return n-D subscripts instead of linear index. sub 
-%       will be a 1 x nDim cell. This is equivalent to [sub{:}] = sub2ind(volSize, idx), but is done
+%       will be a 1 x nDim cell. This is equivalent to [sub{:}] = ind2sub(volSize, idx), but is done
 %       faster inside this function.
 %
 %   [..., newVolSize, nPatches, overlap] = grid(...) returns the size of the cropped volume, the
