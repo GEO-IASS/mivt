@@ -23,6 +23,10 @@ function varargout = vol2lib(vol, patchSize, varargin)
 %       smaller than or equal to the size of vol. It will be smaller than the initial volume if the
 %       volume had to be cropped. Also returns the number of patches nPatches.
 %
+%   [..., libIdx] = vol2lib(...) only given a cell of vols, returns a cell array with each entry
+%       being a column vector with the same number of rows as library, indicating the volume index
+%       (i.e. 1..numel(vols))
+%
 %   Current Algorithm:
 %       Initiate by getting a first 'grid' of the top left index of every patch
 %       Iterate: shift through all the indexes in a patch (1:prod(patchSize)) 
@@ -42,14 +46,8 @@ function varargout = vol2lib(vol, patchSize, varargin)
    
     % if vol is a cell, recursively compute the libraries for each cell. 
     if iscell(vol)
-        varargout{1} = cell(numel(vol), 1);
-        idx = cell(numel(vol), 1);
-        sizes = cell(numel(vol), 1);
-        for i = 1:numel(vol)
-            [varargout{1}{i}, idx{i}, sizes{i}] = patchlib.vol2lib(vol{i}, patchSize, varargin{:});
-        end
-        if nargout == 2, varargout{2} = idx; end
-        if nargout == 2, varargout{3} = sizes; end
+        varargout = cell(nargout, 1);
+        [varargout{:}] = vol2libcell(vol, patchSize, varargin{:});
         return
     end
     
@@ -65,7 +63,6 @@ function varargout = vol2lib(vol, patchSize, varargin)
     initsub = cell(1, nDims);
     [initsub{:}] = ind2sub(volSize, initidx);
     vol = cropVolume(vol, cropVolSize);
-    
     
     % get all of the shifts in a [prod(patchSize) x nDims] subscript matrix
     shift = cell(1, nDims);
@@ -111,3 +108,30 @@ function varargout = vol2lib(vol, patchSize, varargin)
     outputs = {library, initidx(:), cropVolSize, nPatches};
     varargout = outputs(1:nargout); 
 end
+
+function varargout = vol2libcell(vol, patchSize, varargin)
+
+    % sep fcn
+    varargout{1} = cell(numel(vol), 1);
+    idx = cell(numel(vol), 1);
+    sizes = cell(numel(vol), 1);
+    nPatches = cell(numel(vol), 1);
+    
+    % run vol2lib on each patch
+    for i = 1:numel(vol)
+        [varargout{1}{i}, idx{i}, sizes{i}, nPatches{i}] = ...
+            patchlib.vol2lib(vol{i}, patchSize, varargin{:});
+    end
+    
+    if nargout >= 2, varargout{2} = idx; end
+    if nargout >= 3, varargout{3} = sizes; end
+    if nargout >= 4, varargout{4} = nPatches; end
+    if nargout == 5,
+        idxcell = cell(numel(vol), 1);
+        for i = 1:numel(vol),
+            idxcell{i} =  i*ones(size(varargout{1}{i}, 1), 1);
+        end
+        varargout{5} = idxcell;
+    end
+end
+        
