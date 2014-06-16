@@ -27,19 +27,14 @@ function testStackPatches(varargin)
     % prepare tests
     [testids, im, noisyim, patchSize] = setup(varargin{:});
     
-    % build the original and noisy image libraries
-    [lib, ~, ~, nPatches] = patchlib.vol2lib(im, patchSize);
-    noisylib = patchlib.vol2lib(noisyim, patchSize);
-    
-    % do knn search for each patch in noisy image
-    pIdx = knnsearch(lib, noisylib, 'K', 1);
-    
+    % perform a knn search for sliding patches in noisyim by using im as reference.
     % extract patches in a [nPatches x V] matrix, where V == prod(patchSize)
-    patches = patchlib.lib2patches(lib, pIdx, patchSize);
+    patches = patchlib.volknnsearch(noisyim, im, patchSize, 'K', 1);
+    [~, ~, nPatches] = patchlib.grid(size(im), patchSize);
     
     % assemble the patches into layers
     layers = patchlib.stackPatches(patches, patchSize, nPatches);
-    
+
     %%% Test 1
     if ismember(1, testids)
         patchlib.viewLayers2D(layers, 'discrete', patchSize);
@@ -77,7 +72,6 @@ function testStackPatches(varargin)
         title('resulting image of mean-votes of first NN');
     end
 end
-
 
 function [testids, im, noisyim, patchSize] = setup(varargin)
 
