@@ -6,6 +6,10 @@ function [filtVol, filt]  = imBlurSep(vol, window, sigma, voxDims, padType)
 % 	voxDims the dimensions of the voxels in mm (nDims x 1)
 %	padType - 'nn' for nearest neighbour padding, any other string for no padding
 %
+% TODO: rename to volblur?
+%   - allow no sigma param (and estimate it say with 3x stdev)
+%   
+%
 % Contact: adalca@mit.edu
 
     if isscalar(sigma)
