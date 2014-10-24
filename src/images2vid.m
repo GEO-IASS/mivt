@@ -38,7 +38,7 @@ nFrames = numel(inputFiles);
 % build writer object
 writerObj = VideoWriter(outfile, p.Results.profile);
 writerObj.FrameRate = p.Results.frameRate;
-if strcmp(p.Results.fileext, 'MPEG-4') || strcmp(p.Results.fileext, 'Motion JPEG AVI')
+if strcmp(p.Results.profile, 'MPEG-4') || strcmp(p.Results.profile, 'Motion JPEG AVI')
     writerObj.Quality = p.Results.quality;
 end
 open(writerObj);
