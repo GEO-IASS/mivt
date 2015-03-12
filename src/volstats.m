@@ -1,4 +1,17 @@
 function stats = volstats(vol, verbose)
+% VOLSTATS compute several quick statistics about a given volume
+%   stats = volstats(vol) computes information and quick statistics on a given volume and returns a
+%   struct:
+%       stats.class
+%       stats.size
+%       stats.min
+%       stats.max
+%       stats.histconts
+%       stats.histbins
+%
+%   stats = volstats(vol, verbose)
+%
+% Contact: adalca.mit.edu
 
     if nargin == 1
         verbose = false;
