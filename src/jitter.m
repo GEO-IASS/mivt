@@ -11,7 +11,13 @@ function colmap = jitter(n, colmapfnc)
 %   take color numbers, in order, 1, 3, 5, 7, 9, 2, 4, 6, 8.
 %
 %   Example:
-%       jitter(100);
+%       colmap = jitter(10);
+%       figure(); hold on;
+%       for i = 1:10
+%           x = sort(rand(20, 1) * 10);
+%           y = x .* randi([1, 3]) + randn(20, 1) * 0.5;
+%           plot(x, y, '.-', 'color', colmap(i, :));
+%       end
 %
 %   Contact: adalca@csail.mit.edu
     
