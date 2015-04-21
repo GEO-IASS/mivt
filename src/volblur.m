@@ -82,13 +82,14 @@ function inputs = parseInputs(vol, sigma, varargin)
     end
     
     p = inputParser();
-    p.addParamValue('voxDims', 1, @isnumeric);
-    p.addParamValue('padType', 'nn', @ischar);
+    p.addParameter('voxDims', 1, @isnumeric);
+    p.addParameter('padType', 'nn', @ischar);
     p.parse(varargin{:});
     inputs = p.Results;
     inputs.window = window;
     
     % change sigma from scalar to indow
+    inputs.sigma = sigma;
     if isscalar(sigma)
         inputs.sigma = ones(1, ndims(vol)) * sigma ./ inputs.voxDims;
     end    

@@ -38,12 +38,13 @@ function vol = volresize(vol, sizeDstVol, interpMethod)
     if isDownSampling && ~isUpSampling && ~isNearest && ~isNearestPatch
         
         % blur the image. note the sigma factor is kind of arbritrary
-        % s = pi^2 / 8 * sizeDstVol./sizeVol;
         s = 1/4 * sizeVol ./ sizeDstVol;
-        window = ceil(6 * s) + mod(ceil(6 * s), 2) + 1;
+        vol = volblur(vol, s);
         
+        % notes from previous methods
+        % s = pi^2 / 8 * sizeDstVol./sizeVol;
+        % window = ceil(6 * s) + mod(ceil(6 * s), 2) + 1;
         % nn here is for the edge padding with nearest neighbours, not interpolation
-        vol = imBlurSep(vol, window, s, ones(1, ndims(vol)), 'nn');     
     end
     
     % get the interpolation points in each dimensions
