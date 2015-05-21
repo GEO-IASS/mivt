@@ -1,0 +1,114 @@
+function vol = volwarp(vol, disp, varargin)
+% VOLWARP warp a n-dim volume via displacement fields.
+%
+% I = volwarp(vol, disp) warp the n-dimentional volume vol according to the displacements in disp.
+% disp is a cell array of the size 1xD, where D is the dimension of vol (e.g. 2 for images, 3 for
+% structural MRI), and each cell entry is a displacement volume of the same size as vol. The
+% displacements specify 'forward' movement, i.e. where each voxel in the volume should move.
+%
+% I = volwarp(vol, disp, direction) allows direction to be 'backward', indicates that the given
+% displacements specify the shift used to get to the current volume, and we want the backwards warp.
+% That is, we want newVol such that vol = newVol with displacements. direction can also be
+% 'forward', which is then equivalent to volwarp(vol, disp).
+%
+% I = volwarp(vol, disp, ..., param, value) allows for the following optional parameter/value pairs:
+%   'interpmethod': interpolation method as taken by interpn (if backwards) or griddatan 
+%       (if forwards). default: 'linear'
+%   'extrapval': extrapolation value (scalar), as taken by interpn (if backwards). default: 0
+%
+% partly inspired by iminterpolate() from demons toolbox by Herve Lombaert
+%   (http://www.mathworks.com/matlabcentral/fileexchange/39194-diffeomorphic-log-demons-image-registration)
+% 
+% example 1
+%   n = 10;
+%   one = ones(n, n);
+%   im1 = rand(n, n); 
+%   imf = volwarp(im1, {one, one});
+%   imo = volwarp(imf, {one, one}, 'backward');
+%   figure(); 
+%   subplot(1,3,1); imshow(im1); title('original');
+%   subplot(1,3,2); imshow(imf); title('all pixels moved by (1, 1)');
+%   subplot(1,3,3); imshow(imo); title('backward from second image to get back first (almost)');
+%
+% example 2
+%   n = 10;
+%   im1 = zeros(n, n); 
+%   im1(3, 3) = 1; % get an image with a bump
+%   imf = volwarp(im1, {im1*5, im1*3}); % move the bump by (1, 1)
+%   imo = volwarp(imf, {im1*5, im1*3}, 'backward'); % move it back
+%   figure(); 
+%   subplot(1,3,1); imshow(im1); title('original');
+%   subplot(1,3,2); imshow(imf); title('moved bump');
+%   subplot(1,3,3); imshow(imo); title('backward from second image to get back first (almost)');
+%
+% TODO: 
+%   - part of this is similar to patchlib.corresp2dist.
+%   - explore other Scattered Data Interpolation for forward case:
+%       http://www.mathworks.com/help/matlab/scattered-data-interpolation.html
+%
+% Author: adalca@csail.mit.edu
+
+    % parse inputs
+    inputs = parseInputs(vol, disp, varargin{:});
+
+    % get current volume locations grid.
+    ranges = arrayfunc(@(x) 0:(x-1), size(vol));
+    [ranges{:}] = ndgrid(ranges{:});
+
+    % get shifted locations
+    corresp = cellfunc(@plus, ranges, disp);
+
+    % warp points via smartly inteprolating image
+    % here we're using interpn(givenX, givenY, I, targetX, targetY).
+    if strcmp(inputs.dirn, 'forward')
+        % If the passed displacement is a 'forward' displacement (vol.e. volume is moving by these
+        % displacement), then we simply tell interpn that the volume of voxels (vol) is *at* the
+        % shifted positions (corresp{:}). This basically shifts the voxels just because of the
+        % representation used by interpn. We then ask interpn for the new voxels at the locations
+        % given by the standard grid given in (ranges{:}).
+        
+        % we want to do:
+        % >> vol = interpn(corresp{:}, vol, ranges{:}, inputs.interpmethod, inputs.extrapval); 
+        % but interpn expects gridded corresp. So instead we'll have to use gridatan(), which is
+        % slightly more cumbersome, but still okay.
+        c = cellfunc(@(x) x(:), corresp); X1 = cat(2, c{:});
+        c = cellfunc(@(x) x(:), ranges); X2 = cat(2, c{:});
+        nvol = griddatan(X1, vol(:), X2, inputs.interpmethod); 
+        vol = reshape(nvol, size(vol));
+        
+    else
+        % If the passed displacement is a 'backward' displacement (vol.e. the given volume is the
+        % result of having moved voxels by the given displacement, and we want the original volume),
+        % we do the opposite: we tell interpn that the volume of voxels (vol) is *at* the grid
+        % locations. Now, for a new volume that's the same size as the volumes given in (ranges{:}),
+        % we want the values at each of the voxels in the new volume to be the value of vol in the
+        % shifted location. In other words, newvol(5, 3) = vol(ranges(5, 3)). So the new vol is the
+        % volume that was moved to create vol. This is therefore a backwards transform.
+        vol = interpn(ranges{:}, vol, corresp{:}, inputs.interpmethod, inputs.extrapval); 
+    end
+end
+
+function inputs = parseInputs(vol, disp, varargin)
+% parse inputs according to volwarp signature.
+
+    p = inputParser();
+    p.addRequired('vol', @isnumeric);
+    p.addRequired('disp', @iscell);
+    p.addOptional('dirn', 'forward', @(x) sum(strcmp(x, {'forward', 'backward'})) == 1);
+    p.addParameter('interpmethod', 'linear', @ischar); % should be anything interpn allows
+    p.addParameter('extrapval', 0, @isscalar);
+    
+    % parse and save inputs
+    p.parse(vol, disp, varargin{:});
+    inputs = p.Results;
+    
+    % check volume and disp dimensionalisites
+    volDims = ndims(vol);
+    assert(numel(disp) == volDims);
+    for i = 1:volDims
+        assert(ndims(disp{i}) == volDims, ...
+            'disp %d dims (%d) is not the same as vol dims (%d)', i, ndims(disp), volDims);
+        assert(all(size(disp{i}) == size(vol)), 'disp %d size is not the same as vol size', i);
+    end
+
+end
