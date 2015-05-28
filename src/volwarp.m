@@ -67,13 +67,16 @@ function vol = volwarp(vol, disp, varargin)
         % representation used by interpn. We then ask interpn for the new voxels at the locations
         % given by the standard grid given in (ranges{:}).
         
-        % we want to do:
-        % >> vol = interpn(corresp{:}, vol, ranges{:}, inputs.interpmethod, inputs.extrapval); 
-        % but interpn expects gridded corresp. So instead we'll have to use gridatan(), which is
-        % slightly more cumbersome, but still okay.
+        % we want to do: 
+        % >> vol = interpn(corresp{:}, vol, ranges{:}, inputs.interpmethod, inputs.extrapval); but
+        % interpn expects gridded corresp. So instead we'll have to use gridatan(), which is
+        % slightly more cumbersome, but still okay. In fact, we use the slightly-modified
+        % griddatanx(), whose only modification from griddatan is that in the case of interpolation
+        % method of 'nearest', it doesn't "average" the values of duplicate X data, but takes the
+        % median.
         c = cellfunc(@(x) x(:), corresp); X1 = cat(2, c{:});
         c = cellfunc(@(x) x(:), ranges); X2 = cat(2, c{:});
-        nvol = griddatan(X1, vol(:), X2, inputs.interpmethod); 
+        nvol = griddatanx(X1, vol(:), X2, inputs.interpmethod); 
         vol = reshape(nvol, size(vol));
         
     else
