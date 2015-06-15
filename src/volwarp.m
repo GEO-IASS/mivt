@@ -76,11 +76,30 @@ function vol = volwarp(vol, disp, varargin)
         % median.
         c = cellfunc(@(x) x(:), corresp); X1 = cat(2, c{:});
         c = cellfunc(@(x) x(:), ranges); X2 = cat(2, c{:});
-        nvol = griddatanx(X1, vol(:), X2, inputs.interpmethod); 
-        vol = reshape(nvol, size(vol));
         
+        try
+            nvol = griddatanx(X1, vol(:), X2, inputs.interpmethod); 
+            
+        catch except
+            
+            % Note: we have to use 'QJ' because often times parts of the grid don't move.
+            %
+            % Explanation from the internets: 
+            % Your data is already on a grid, or you have replicate values, or multipally collinear
+            % points.
+            % Griddata, which is built on Delaunay triangulations, is not designed to work well on
+            % this type of data. It IS designed to work on scattered data.
+            % 'QJ' randomly joggles the data so the points no longer suffer from the problems which
+            % plague griddata. An intersting feature of this is that griddata will now produce
+            % subtly different results for your surface when called repeatedly. This happens because
+            % the triagulation will change randomly with each call.
+            warning(except.message(1:min(80, numel(except.message))));
+            nvol = griddatanx(X1, vol(:), X2, inputs.interpmethod, {'QJ'}); 
+        end
+        
+        vol = reshape(nvol, size(vol));
     else
-        % If the passed displacement is a 'backward' displacement (vol.e. the given volume is the
+        % If the passed displacement is a 'backward' displacement (the given volume is the
         % result of having moved voxels by the given displacement, and we want the original volume),
         % we do the opposite: we tell interpn that the volume of voxels (vol) is *at* the grid
         % locations. Now, for a new volume that's the same size as the volumes given in (ranges{:}),
