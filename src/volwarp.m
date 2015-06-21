@@ -108,6 +108,14 @@ function vol = volwarp(vol, disp, varargin)
         % volume that was moved to create vol. This is therefore a backwards transform.
         vol = interpn(ranges{:}, vol, corresp{:}, inputs.interpmethod, inputs.extrapval); 
     end
+    
+    % correct any NANs in the displacements. 
+    % Usually these happen at the edges due to silly interpolations.
+    nNANs = sum(isnan(vol(:)));
+    if nNANs > 0
+        warning('volwarp: found %d NANs. Transforming them to 0s', nNANs);
+        vol(isnan(vol)) = 0; 
+    end
 end
 
 function inputs = parseInputs(vol, disp, varargin)
