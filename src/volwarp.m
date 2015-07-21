@@ -14,7 +14,10 @@ function vol = volwarp(vol, disp, varargin)
 % I = volwarp(vol, disp, ..., param, value) allows for the following optional parameter/value pairs:
 %   'interpmethod': interpolation method as taken by interpn (if backwards) or griddatan 
 %       (if forwards). default: 'linear'
-%   'extrapval': extrapolation value (scalar), as taken by interpn (if backwards). default: 0
+%   'extrapval': extrapolation value (scalar), as taken by interpn (if backwards). default: 0\
+%   'nancleanup': 'inpaintn' (default) or 'zeros' on whether to inpaint or 0. 
+%       inpainting requires inpaintn, a matlab central function. TODO: replace with functions rather
+%       than chars/strings.
 %
 % partly inspired by iminterpolate() from demons toolbox by Herve Lombaert
 %   (http://www.mathworks.com/matlabcentral/fileexchange/39194-diffeomorphic-log-demons-image-registration)
@@ -110,11 +113,23 @@ function vol = volwarp(vol, disp, varargin)
     end
     
     % correct any NANs in the displacements. 
+    vol = nancleanup(vol, inputs.nancleanup);
+end
+
+function vol = nancleanup(vol, method)
+    % correct any NANs in the displacements. 
     % Usually these happen at the edges due to silly interpolations.
     nNANs = sum(isnan(vol(:)));
     if nNANs > 0
-        warning('volwarp: found %d NANs. Transforming them to 0s', nNANs);
-        vol(isnan(vol)) = 0; 
+        if strcmp(method, 'zeros')
+            warning('volwarp: found %d NANs. Transforming them to 0s', nNANs);
+            vol(isnan(vol)) = 0; 
+        elseif strcmp(method, 'inpaintn')
+            warning('volwarp: found %d NANs. Inpainting them', nNANs);
+            vol = inpaintn(vol);
+        else
+            error('unknown nan cleaning method');
+        end
     end
 end
 
@@ -127,6 +142,7 @@ function inputs = parseInputs(vol, disp, varargin)
     p.addOptional('dirn', 'forward', @(x) sum(strcmp(x, {'forward', 'backward'})) == 1);
     p.addParameter('interpmethod', 'linear', @ischar); % should be anything interpn allows
     p.addParameter('extrapval', 0, @isscalar);
+    p.addParameter('nancleanup', 'inpaintn', @ischar);
     
     % parse and save inputs
     p.parse(vol, disp, varargin{:});
@@ -140,5 +156,4 @@ function inputs = parseInputs(vol, disp, varargin)
             'disp %d dims (%d) is not the same as vol dims (%d)', i, ndims(disp), volDims);
         assert(all(size(disp{i}) == size(vol)), 'disp %d size is not the same as vol size', i);
     end
-
 end
