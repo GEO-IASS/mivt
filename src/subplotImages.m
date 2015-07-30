@@ -1,4 +1,4 @@
-function plotImages(fid, varargin)
+function subplotImages(fid, varargin)
 % PLOTIMAGES plots several images in subplots.
 %   plotimages(fid, im1, imtitle1, ...) plots images im1...imN with titles
 %   imtitle1..imtitleN. It finds a reasonable number of rows and columns to
