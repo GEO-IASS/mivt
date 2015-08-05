@@ -46,6 +46,7 @@ end
 
 function h = gaussianfilter(window, sigma)
 % fast implementation of gaussian filter
+% TODO: this only works with window being of size 2!
 % TODO: check: this works in 3D?
 
     siz = (window-1)/2;
