@@ -9,6 +9,7 @@ function [filtVol, filt]  = imBlurSep(vol, window, sigma, voxDims, padType)
 %
 % Contact: adalca@mit.edu
 
+    warning('imBlurSep is being phased out. use volblur()');
 
     % input parsing
     narginchk(3, 5);
@@ -25,6 +26,5 @@ function [filtVol, filt]  = imBlurSep(vol, window, sigma, voxDims, padType)
     end
     assert(all(mod(window, 2) == 1));
 
-    warning('imBlurSep is being phased out. use volblur()');
     [filtVol, filt]  = volblur(vol, sigma, window, 'voxDims', voxDims, 'padType', padType);
 end
