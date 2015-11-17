@@ -1,6 +1,6 @@
-function vol = perlin (volSize)
+function vol = perlin(volSize)
 % PERLIN volume of perlin noise 
-%   vol = perslin(volSize) generate a perlin noise volume of size volSize
+%   vol = perlin(volSize) generate a perlin noise volume of size volSize
 %   
 %   algorithm adapted from http://nullprogram.com/blog/2007/11/20
 %
