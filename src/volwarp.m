@@ -156,4 +156,9 @@ function inputs = parseInputs(vol, disp, varargin)
             'disp %d dims (%d) is not the same as vol dims (%d)', i, ndims(disp), volDims);
         assert(all(size(disp{i}) == size(vol)), 'disp %d size is not the same as vol size', i);
     end
+    
+    if strcmp(inputs.nancleanup, 'inpaintn')
+        % see inpaintn by Damien Garcia
+        assert(exist('inpaintn') > 0, 'inpaintn.m is required for inpaintn method'); %#ok<EXIST>
+    end
 end
