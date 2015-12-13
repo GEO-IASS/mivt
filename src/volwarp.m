@@ -115,7 +115,7 @@ function vol = volwarp(vol, disp, varargin)
         nvol = interpn(ranges{:}, vol, X2{:}, inputs.interpmethod, inputs.extrapval); 
     end
     
-    if all(inputs.selidxout == 1:numel(vol))
+    if numel(inputs.selidxout) == numel(vol) && all(inputs.selidxout(:)' == 1:numel(vol))
         vol = reshape(nvol, size(vol));
         
         % correct any NANs in the displacements. 
