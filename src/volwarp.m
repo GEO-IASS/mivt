@@ -18,6 +18,8 @@ function vol = volwarp(vol, disp, varargin)
 %   'nancleanup': 'inpaintn' (default) or 'zeros' on whether to inpaint or 0. 
 %       inpainting requires inpaintn, a matlab central function. TODO: replace with functions rather
 %       than chars/strings.
+%   'selidxout': directly interpolate at only specific points. If this option is specified, there
+%       will be no nan-cleanup operation. 
 %
 % partly inspired by iminterpolate() from demons toolbox by Herve Lombaert
 %   (http://www.mathworks.com/matlabcentral/fileexchange/39194-diffeomorphic-log-demons-image-registration)
@@ -55,8 +57,7 @@ function vol = volwarp(vol, disp, varargin)
     inputs = parseInputs(vol, disp, varargin{:});
 
     % get current volume locations grid.
-    ranges = arrayfunc(@(x) 0:(x-1), size(vol));
-    [ranges{:}] = ndgrid(ranges{:});
+    ranges = size2ndgrid(size(vol));
 
     % get shifted locations
     corresp = cellfunc(@plus, ranges, disp);
@@ -79,12 +80,7 @@ function vol = volwarp(vol, disp, varargin)
         % median.
         c = cellfunc(@(x) x(:), corresp); 
         X1 = cat(2, c{:});
-        if isempty(inputs.selidxout)
-            c = cellfunc(@(x) x(:), ranges);
-        else
-            c = cellfunc(@(x) x(inputs.selidxout), ranges); 
-        end
-            
+        c = cellfunc(@(x) x(inputs.selidxout), ranges); 
         X2 = cat(2, c{:});
         
         try
@@ -107,10 +103,6 @@ function vol = volwarp(vol, disp, varargin)
             nvol = griddatanx(X1, vol(:), X2, inputs.interpmethod, {'QJ'}); 
         end
         
-        if isempty(inputs.selidxout)
-            vol = reshape(nvol, size(vol));
-        end
-        
     else
         % If the passed displacement is a 'backward' displacement (the given volume is the
         % result of having moved voxels by the given displacement, and we want the original volume),
@@ -119,16 +111,16 @@ function vol = volwarp(vol, disp, varargin)
         % we want the values at each of the voxels in the new volume to be the value of vol in the
         % shifted location. In other words, newvol(5, 3) = vol(ranges(5, 3)). So the new vol is the
         % volume that was moved to create vol. This is therefore a backwards transform.
-        if isempty(inputs.selidxout)
-            X2 = corresp;
-        else
-            X2 = cellfunc(@(x) x(inputs.selidxout), corresp);
-        end
-        vol = interpn(ranges{:}, vol, X2{:}, inputs.interpmethod, inputs.extrapval); 
+        X2 = cellfunc(@(x) x(inputs.selidxout), corresp);
+        nvol = interpn(ranges{:}, vol, X2{:}, inputs.interpmethod, inputs.extrapval); 
     end
     
-    % correct any NANs in the displacements. 
-    vol = nancleanup(vol, inputs.nancleanup);
+    if all(inputs.selidxout == 1:numel(vol))
+        vol = reshape(nvol, size(vol));
+        
+        % correct any NANs in the displacements. 
+        vol = nancleanup(vol, inputs.nancleanup);
+    end
 end
 
 function vol = nancleanup(vol, method)
@@ -162,7 +154,7 @@ function inputs = parseInputs(vol, disp, varargin)
     p.addParameter('nancleanup', 'inpaintn', @ischar);
     
     % directly interpolate at only specific points, but this is an issue if you need to use interpn
-    p.addParameter('selidxout', [], @isnumeric); 
+    p.addParameter('selidxout', 1:numel(vol), @isnumeric); 
     
     % parse and save inputs
     p.parse(vol, disp, varargin{:});
