@@ -80,7 +80,7 @@ function vol = volwarp(vol, disp, varargin)
         % median.
         c = cellfunc(@(x) x(:), corresp); 
         X1 = cat(2, c{:});
-        c = cellfunc(@(x) x(inputs.selidxout), ranges); 
+        c = cellfunc(@(x) x(inputs.selidxout(:)), ranges); 
         X2 = cat(2, c{:});
         
         try
@@ -116,7 +116,7 @@ function vol = volwarp(vol, disp, varargin)
     end
     
     if numel(inputs.selidxout) == numel(vol) && all(inputs.selidxout(:)' == 1:numel(vol))
-        vol = reshape(nvol, size(vol));
+        vol = reshape(nvol, size(inputs.selidxout));
         
         % correct any NANs in the displacements. 
         vol = nancleanup(vol, inputs.nancleanup);
@@ -154,7 +154,7 @@ function inputs = parseInputs(vol, disp, varargin)
     p.addParameter('nancleanup', 'inpaintn', @ischar);
     
     % directly interpolate at only specific points, but this is an issue if you need to use interpn
-    p.addParameter('selidxout', 1:numel(vol), @isnumeric); 
+    p.addParameter('selidxout', reshape(1:numel(vol), size(vol)), @isnumeric); 
     
     % parse and save inputs
     p.parse(vol, disp, varargin{:});
