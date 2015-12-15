@@ -120,6 +120,8 @@ function vol = volwarp(vol, disp, varargin)
         
         % correct any NANs in the displacements. 
         vol = nancleanup(vol, inputs.nancleanup);
+    else
+        vol = nvol;
     end
 end
 
