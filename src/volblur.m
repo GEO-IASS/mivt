@@ -10,6 +10,8 @@ function [filtVol, filt]  = volblur(vol, sigma, varargin)
 %   'voxDims' - the dimensions of the voxels in mm, again a scalar or [1, ndims(vol)]. default: 1
 %   'padType' - 'nn' for nearest neighbour padding, any other string for no padding. default: nn
 %
+%   TODO: could just allow voxDims and padType as normal inputs, not param/value.?
+%
 %   See Also: imBlurSep, imfilterSep
 %
 % Contact: adalca@mit.edu
