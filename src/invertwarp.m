@@ -10,14 +10,14 @@ function iwarp = invertwarp(warp, volwarpfn)
 
     narginchk(1, 2);
     if nargin == 1
-        volwarpfn = @volwarp; % culd try volwarpForwardApprox
+        volwarpfn = @(x, w) volwarp(x, w, 'forward'); % culd try volwarpForwardApprox
     end
 
     % get an nd grid based on the size of the warp
     grd = size2ndgrid(size(warp{1}));
 
     % warp the grid, this takes it to "target" space
-    grdw = cellfunc(@(x) volwarpfn(x, warp, 'forward'), grd);
+    grdw = cellfunc(@(x) volwarpfn(x, warp), grd);
 
     % now compute the difference.
     iwarp = cellfunc(@(ws, t) ws - t, grdw, grd);
