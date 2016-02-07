@@ -10,6 +10,9 @@ function vol = volwarp(vol, disp, varargin)
 % displacements specify the shift used to get to the current volume, and we want the backwards warp.
 % That is, we want newVol such that vol = newVol with displacements. direction can also be
 % 'forward', which is then equivalent to volwarp(vol, disp).
+% 
+% large volwarp execution with 'forward' warps is quite slow. see volwarpForwardApprox() for an
+% alternative.
 %
 % I = volwarp(vol, disp, ..., param, value) allows for the following optional parameter/value pairs:
 %   'interpmethod': interpolation method as taken by interpn (if backwards) or griddatan 
@@ -23,7 +26,7 @@ function vol = volwarp(vol, disp, varargin)
 %
 % partly inspired by iminterpolate() from demons toolbox by Herve Lombaert
 %   (http://www.mathworks.com/matlabcentral/fileexchange/39194-diffeomorphic-log-demons-image-registration)
-% 
+%
 % example 1
 %   n = 10;
 %   one = ones(n, n);
@@ -50,6 +53,8 @@ function vol = volwarp(vol, disp, varargin)
 %   - part of this is similar to patchlib.corresp2dist.
 %   - explore other Scattered Data Interpolation for forward case:
 %       http://www.mathworks.com/help/matlab/scattered-data-interpolation.html
+%
+% See Also: volwarpForwardApprox
 %
 % Author: adalca@csail.mit.edu
 
@@ -101,7 +106,7 @@ function vol = volwarp(vol, disp, varargin)
             % the triagulation will change randomly with each call.
             warning(except.message(1:min(80, numel(except.message))));
             nvol = griddatanx(X1, vol(:), X2, inputs.interpmethod, {'QJ'}); 
-        end
+        end            
         
     else
         % If the passed displacement is a 'backward' displacement (the given volume is the
