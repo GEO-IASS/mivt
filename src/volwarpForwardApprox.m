@@ -242,7 +242,7 @@ function [vol, warp, opts] = parseInputs(vol, warp, varargin)
     p.addRequired('vol', @isnumeric);
     p.addRequired('warp', @iscell);
     p.addParameter('nLayers', 1, @isscalar); % should be 1 is nearest 
-    p.addParameter('interpMethod', 'linear', @ischar);
+    p.addParameter('interpMethod', 'exp', @ischar);
     p.addParameter('interpParam', 2); % 2 is default for 'exp' interpMethod
     p.parse(vol, warp, varargin{:});
     opts.nLayers = p.Results.nLayers;
