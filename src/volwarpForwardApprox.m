@@ -14,6 +14,9 @@ function [warpedvol, varargout] = volwarpForwardApprox(vol, warp, varargin)
 % completely, but we can fill them in at the end if there's few enough of them. This method can be
 % 40-200x faster than volwarp.
 %
+% Missed voxels (voxels with no votes) are filled in with inpaintn or nearest-neighbour heuristic,
+% depending on the desired interpolation method.
+%
 % warpedvol = volwarpForwardApprox(vol, warp, Param, Value, ...) allows for the following
 % param/value pairs:
 %   nLayers - default:1. This is the number of "layers" (i.e. grid edges in each direction) a
@@ -34,6 +37,14 @@ function [warpedvol, varargout] = volwarpForwardApprox(vol, warp, varargin)
 % volumes volcountvol (the number of votes contributing to each voxel), and maxWeight (the maximum
 % weight contributing to each voxel), but these take extra time to compute and are meant as
 % debugging variables only.
+%
+% TODO: we're currently not voting for some voxels due to the warp field expanding, say. One idea is
+% to sub-sample the volume (say, by resizing it to twice its size), as well as the warps. Then, run
+% this algorithm and vote. Then, downsample back to the original volume size. This would potentially
+% facilitate some votes for those in-between previously missed voxels due to the interpolated warp.
+% But I'm not sure how well it would work, how much we'd have to upsample, etc.
+%
+% TODO: use griddatan instead of interpn?
 %
 % Requires: mgt toolbox, interpn function
 %
