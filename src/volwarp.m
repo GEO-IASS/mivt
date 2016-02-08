@@ -15,7 +15,7 @@ function vol = volwarp(vol, disp, varargin)
 % alternative.
 %
 % I = volwarp(vol, disp, ..., param, value) allows for the following optional parameter/value pairs:
-%   'interpmethod': interpolation method as taken by interpn (if backwards) or griddatan 
+%   'interpMethod': interpolation method as taken by interpn (if backwards) or griddatan 
 %       (if forwards). default: 'linear'
 %   'extrapval': extrapolation value (scalar), as taken by interpn (if backwards). default: 0\
 %   'nancleanup': 'inpaintn' (default) or 'zeros' on whether to inpaint or 0. 
@@ -77,7 +77,7 @@ function vol = volwarp(vol, disp, varargin)
         % given by the standard grid given in (ranges{:}).
         
         % we want to do: 
-        % >> vol = interpn(corresp{:}, vol, ranges{:}, inputs.interpmethod, inputs.extrapval); but
+        % >> vol = interpn(corresp{:}, vol, ranges{:}, inputs.interpMethod, inputs.extrapval); but
         % interpn expects gridded corresp. So instead we'll have to use gridatan(), which is
         % slightly more cumbersome, but still okay. In fact, we use the slightly-modified
         % griddatanx(), whose only modification from griddatan is that in the case of interpolation
@@ -89,7 +89,7 @@ function vol = volwarp(vol, disp, varargin)
         X2 = cat(2, c{:});
         
         try
-            nvol = griddatanx(X1, vol(:), X2, inputs.interpmethod); 
+            nvol = griddatanx(X1, vol(:), X2, inputs.interpMethod); 
             
         catch except
             
@@ -105,7 +105,7 @@ function vol = volwarp(vol, disp, varargin)
             % subtly different results for your surface when called repeatedly. This happens because
             % the triagulation will change randomly with each call.
             warning(except.message(1:min(80, numel(except.message))));
-            nvol = griddatanx(X1, vol(:), X2, inputs.interpmethod, {'QJ'}); 
+            nvol = griddatanx(X1, vol(:), X2, inputs.interpMethod, {'QJ'}); 
         end            
         
     else
@@ -117,7 +117,7 @@ function vol = volwarp(vol, disp, varargin)
         % shifted location. In other words, newvol(5, 3) = vol(ranges(5, 3)). So the new vol is the
         % volume that was moved to create vol. This is therefore a backwards transform.
         X2 = cellfunc(@(x) x(inputs.selidxout), corresp);
-        nvol = interpn(ranges{:}, vol, X2{:}, inputs.interpmethod, inputs.extrapval); 
+        nvol = interpn(ranges{:}, vol, X2{:}, inputs.interpMethod, inputs.extrapval); 
     end
     
     if numel(inputs.selidxout) == numel(vol) && all(inputs.selidxout(:)' == 1:numel(vol))
@@ -156,7 +156,7 @@ function inputs = parseInputs(vol, disp, varargin)
     p.addRequired('vol', @isnumeric);
     p.addRequired('disp', @iscell);
     p.addOptional('dirn', 'forward', @(x) sum(strcmp(x, {'forward', 'backward'})) == 1);
-    p.addParameter('interpmethod', 'linear', @ischar); % should be anything interpn allows
+    p.addParameter('interpMethod', 'linear', @ischar); % should be anything interpn allows
     p.addParameter('extrapval', 0, @isscalar);
     p.addParameter('nancleanup', 'inpaintn', @ischar);
     
