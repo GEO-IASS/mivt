@@ -52,6 +52,8 @@ function [warpedvol, varargout] = volwarpForwardApprox(vol, warp, varargin)
 %
 % Contact: adalca@csail.mit.edu
     
+    warning('forward volwarp is now implemented (fast!) in MATLAB''s imwarp() as of R2014b.');
+
     % input parsing
     narginchk(2, inf);
     [vol, warp, opts] = parseInputs(vol, warp, varargin{:});
