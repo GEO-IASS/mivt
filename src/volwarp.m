@@ -70,6 +70,9 @@ function vol = volwarp(vol, disp, varargin)
     % warp points via smartly inteprolating image
     % here we're using interpn(givenX, givenY, I, targetX, targetY).
     if strcmp(inputs.dirn, 'forward')
+        warning('forward volwarp is now implemented (fast!) in MATLAB''s imwarp() as of R2014b.');
+        warning('todo: switch to MATLAB implementation if the right version, else allow use of volwarp heuristic.');
+        
         % If the passed displacement is a 'forward' displacement (vol.e. volume is moving by these
         % displacement), then we simply tell interpn that the volume of voxels (vol) is *at* the
         % shifted positions (corresp{:}). This basically shifts the voxels just because of the
