@@ -75,13 +75,6 @@ function inputs = parseInputs(vol, sigma, varargin)
         window = varargin{1};
         varargin = varargin(2:end);
         assert(all(mod(window, 2) == 1));
-    else
-        window = ceil(sigma * 3) * 2 + 1;
-    end
-    
-    % change window from scalar to vector
-    if isscalar(window) 
-        window = ones(1, ndims(vol)) * window;
     end
     
     p = inputParser();
@@ -89,11 +82,21 @@ function inputs = parseInputs(vol, sigma, varargin)
     p.addParameter('padType', 'nn', @ischar);
     p.parse(varargin{:});
     inputs = p.Results;
-    inputs.window = window;
     
-    % change sigma from scalar to indow
+    % change sigma from scalar to vector
+    % we need to do this before processing window since window is affected by sigma
     inputs.sigma = sigma;
     if isscalar(sigma)
         inputs.sigma = ones(1, ndims(vol)) * sigma ./ inputs.voxDims;
     end    
+    
+    % process window
+    if ~exist('window', 'var')
+        window = ceil(inputs.sigma * 3) * 2 + 1;
+    end
+    % change window from scalar to vector
+    if isscalar(window) 
+        window = ones(1, ndims(vol)) * window;
+    end
+    inputs.window = window;
 end
